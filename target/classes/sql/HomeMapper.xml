@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.HomeMapper">
+
+
+	<select id="getPopularCocktail" resultType="sober.model.HomeVO">
+		SELECT *
+		FROM( SELECT (SELECT table_url FROM tbl_table WHERE table_num=1) uri, cocktail_name title, r_num pk_num, img_url img, readcount, register regdate
+				FROM recipe_board
+				ORDER BY readcount DESC, register DESC )
+		WHERE ROWNUM &lt; 21
+	</select>
+	
+	<select id="getPopularParty" resultType="sober.model.HomeVO">
+		SELECT *
+		FROM( SELECT (SELECT table_url FROM tbl_table WHERE table_num=2) uri, title, bo_num pk_num, nickname, location, readcount, schedule regdate
+				FROM party_board
+				WHERE schedule > sysdate
+				ORDER BY readcount DESC	)
+		WHERE ROWNUM &lt; 6
+	</select>
+	
+	<select id="getPopularFood" resultType="sober.model.HomeVO">
+		SELECT *
+		FROM ( SELECT (SELECT table_url FROM tbl_table WHERE table_num=3) uri, title, f_num pk_num, nickname, readcount, reg_date regdate
+				FROM food_board
+				ORDER BY readcount DESC	)
+		WHERE ROWNUM &lt; 6
+	</select>
+	
+	<select id="getRecentNotice" resultType="sober.model.HomeVO">
+		SELECT *
+		FROM ( SELECT (SELECT table_url FROM tbl_table WHERE table_num=5) uri, notice_title title, notice_no pk_num, '관리자' nickname, readcount, notice_time regdate
+				FROM notice_board
+				ORDER BY regdate DESC)
+		WHERE ROWNUM &lt; 6
+	</select>
+	
+	<select id="entireSearch" resultType="sober.model.HomeVO">
+		<![CDATA[	
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM (	SELECT (SELECT table_url FROM tbl_table WHERE table_num=1) uri, (SELECT table_name FROM tbl_table WHERE table_num=1) table_name, cocktail_name title, r_num pk_num, nickname, readcount, register regdate
+						FROM recipe_board
+		                WHERE cocktail_name LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR detail LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+						UNION
+						SELECT (SELECT table_url FROM tbl_table WHERE table_num=2) uri, (SELECT table_name FROM tbl_table WHERE table_num=2) table_name, title, bo_num pk_num, nickname, readcount, reg_date regdate
+						FROM party_board
+		                WHERE title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR location LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+						UNION
+						SELECT (SELECT table_url FROM tbl_table WHERE table_num=3) uri, (SELECT table_name FROM tbl_table WHERE table_num=3) table_name, title, f_num pk_num, nickname, readcount, reg_date regdate
+						FROM food_board
+		                WHERE title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+						UNION
+						SELECT (SELECT table_url FROM tbl_table WHERE table_num=5) uri, (SELECT table_name FROM tbl_table WHERE table_num=5) table_name, notice_title title, notice_no pk_num, '관리자' nickname, readcount, notice_time regdate
+						FROM notice_board
+		                WHERE notice_title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR notice_content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+		                ORDER BY regdate DESC ) first
+				 WHERE rownum  <= #{pageNum} * #{amount})
+			WHERE rn > (#{pageNum} - 1) * #{amount}
+		 ]]>
+	</select>
+	
+	<select id="entireSearchC" resultType="sober.model.HomeVO">
+		<![CDATA[
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM (	SELECT (SELECT table_url FROM tbl_table WHERE table_num=1) uri, (SELECT table_name FROM tbl_table WHERE table_num=1) table_name, cocktail_name title, r_num pk_num, nickname, readcount, register regdate
+						FROM recipe_board
+		                WHERE cocktail_name LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR detail LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+		                ORDER BY regdate DESC ) first
+				 WHERE rownum  <=  #{pageNum} * #{amount})
+			WHERE rn  > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+	
+	<select id="entireSearchP" resultType="sober.model.HomeVO">
+		<![CDATA[
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM (	SELECT (SELECT table_url FROM tbl_table WHERE table_num=2) uri, (SELECT table_name FROM tbl_table WHERE table_num=2) table_name, title, bo_num pk_num, nickname, readcount, reg_date regdate
+						FROM party_board
+		                WHERE title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR location LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+		                ORDER BY regdate DESC ) first
+				 WHERE rownum  <=  #{pageNum} * #{amount})
+			WHERE rn  > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+	<select id="entireSearchF" resultType="sober.model.HomeVO">
+		<![CDATA[
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM (	SELECT (SELECT table_url FROM tbl_table WHERE table_num=3) uri, (SELECT table_name FROM tbl_table WHERE table_num=3) table_name, title, f_num pk_num, nickname, readcount, reg_date regdate
+						FROM food_board
+		                WHERE title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+		                ORDER BY regdate DESC ) first
+				 WHERE rownum  <=  #{pageNum} * #{amount})
+			WHERE rn  > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+	<select id="entireSearchN" resultType="sober.model.HomeVO">
+		<![CDATA[
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM (	SELECT (SELECT table_url FROM tbl_table WHERE table_num=5) uri, (SELECT table_name FROM tbl_table WHERE table_num=5) table_name, notice_title title, notice_no pk_num, '관리자' nickname, readcount, notice_time regdate
+						FROM notice_board
+		                WHERE notice_title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR notice_content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+		                ORDER BY regdate DESC ) first
+				 WHERE rownum  <=  #{pageNum} * #{amount})
+			WHERE rn  > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+	
+	<select id="entireSearchTotal" resultType="int">
+		SELECT COUNT(*) FROM (SELECT (SELECT table_url FROM tbl_table WHERE table_num=1) uri, cocktail_name title, r_num pk_num, nickname, readcount, register regdate
+								FROM recipe_board
+				                WHERE cocktail_name LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR detail LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+								UNION
+								SELECT (SELECT table_url FROM tbl_table WHERE table_num=2) uri, title, bo_num pk_num, nickname, readcount, reg_date regdate
+								FROM party_board
+				                WHERE title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR location LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+								UNION
+								SELECT (SELECT table_url FROM tbl_table WHERE table_num=3) uri, title, f_num pk_num, nickname, readcount, reg_date regdate
+								FROM food_board
+				                WHERE title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+								UNION
+								SELECT (SELECT table_url FROM tbl_table WHERE table_num=5) uri, notice_title title, notice_no pk_num, '관리자' nickname, readcount, notice_time regdate
+								FROM notice_board
+				                WHERE notice_title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR notice_content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%')
+	</select>
+	
+	<select id="entireSearchTotalC" resultType="int">
+			SELECT COUNT(*) 
+			FROM recipe_board
+            WHERE cocktail_name LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR detail LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+	</select>
+	<select id="entireSearchTotalP" resultType="int">
+			SELECT COUNT(*) 
+			FROM party_board
+			WHERE title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR location LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+	</select>
+	<select id="entireSearchTotalF" resultType="int">
+			SELECT COUNT(*) 
+			FROM food_board
+			WHERE title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR nickname LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+	</select>
+	<select id="entireSearchTotalN" resultType="int">
+			SELECT COUNT(*) 
+			FROM notice_board
+			WHERE notice_title LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%' OR notice_content LIKE '%'||#{keyword,jdbcType=VARCHAR}||'%'
+	</select>
+
+</mapper>
+

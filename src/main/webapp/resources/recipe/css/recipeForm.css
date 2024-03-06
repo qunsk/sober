@@ -1,0 +1,32 @@
+.subject {
+	margin: 20px 0px 20px;
+}
+
+.userInput {
+	margin: 0px 10px 0px;
+}
+
+#cb {
+	display: inline-block;
+	width: 0px 0px 10px 0px; 
+}
+
+.box1 {
+	text-align: left;
+	float: left;
+	width: 200px;
+	height: 100px;
+	display: inline-block;
+}
+
+.box2 {
+	text-align: left;
+	display: inline-block;
+	width: 200px;
+	height: 100px;
+	margin-left: 10px;
+}
+
+.box{
+	float:left
+}

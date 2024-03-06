@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.CompanyDAO">
+	<select id="select" resultType="sober.model.Company">
+	select * from company
+	</select>
+
+	<update id="update" parameterType="sober.model.Company">
+	update company set com_name=#{com_name}, com_email=#{com_email},
+	com_phone=#{com_phone}, com_address=#{com_address}
+	</update>
+	
+</mapper>

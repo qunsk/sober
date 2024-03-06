@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="test">
+<!-- 
+	<insert id="par_insert" parameterType="sober.model.party.Party">
+		<selectKey resultType="int" keyProperty="bo_num" order="BEFORE">
+			select nvl(max(bo_num),0)+1 from party_board
+		</selectKey>
+		insert into party_board values(#{bo_num},
+		#{id,jdbcType=VARCHAR},#{location,jdbcType=VARCHAR},#{schedule},
+		#{age,jdbcType=VARCHAR},#{num_of_people,jdbcType=VARCHAR},#{gender,jdbcType=VARCHAR},#{title,jdbcType=VARCHAR},
+		#{content,jdbcType=VARCHAR},sysdate,0,#{bar_name,jdbcType=VARCHAR})
+	</insert>
+ -->
+
+
+
+</mapper>

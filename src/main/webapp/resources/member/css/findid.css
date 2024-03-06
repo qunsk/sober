@@ -1,0 +1,63 @@
+.main {
+	margin-top: 40px;
+}
+
+.main2 {
+	margin-top: 100px;
+}
+
+.main .input_name {
+	width: 420px;
+	display: inline !important;
+} 
+
+.main .input {
+	width: 300px;
+	display: inline !important;
+} 
+
+.main .input3 {
+	width: 300px;
+	display: inline !important;
+}
+
+.submitBtn {
+	width: 150px;
+	height: 50px;
+	border: none;
+	background-color: #D9FF2A;
+	color : black;
+	font-size: 20px;
+	font-weight: bold;
+	margin: 100 0 0 225px;
+}
+
+.closeBtn {
+	margin-bottom: 80px;
+	width: 150px;
+	height: 50px;
+	border: none;
+	background-color: black;
+	color : #D9FF2A;
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.main .button{
+	border: none;
+	width: 120px;
+	height: 35px;
+	border-radius: 5px;
+	background-color: black;
+	color: white;
+	font-weight: bold;	
+}
+
+.fID1{
+	font-weight: bold;
+	font-size: 20px;	
+}
+
+.fID2{
+	font-size: 20px;	
+}

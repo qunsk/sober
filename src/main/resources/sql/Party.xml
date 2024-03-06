@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.PartyDAO">
+
+
+    <!-- 파티장이 insert 시 파티원 리스트에 파티장은 isLeader를 'y'로 -->
+	<insert id="par_insert" parameterType="sober.model.Party">
+		insert into party_board values(party_board_seq.nextval,
+		#{location,jdbcType=VARCHAR},#{schedule},
+		#{age,jdbcType=VARCHAR},#{num_of_people,jdbcType=VARCHAR},#{gender,jdbcType=VARCHAR},#{title,jdbcType=VARCHAR},
+		#{content,jdbcType=VARCHAR},sysdate,0,#{bar_name,jdbcType=VARCHAR},#{nickname,jdbcType=VARCHAR},#{region,jdbcType=VARCHAR},1)
+	</insert>
+
+
+	<select id="getBoardCount" parameterType="sober.model.Party" resultType="int" >
+		select count(*) from party_board
+		<where>
+			<if
+				test='keyword!=null &amp;&amp; keyword!="" &amp;&amp; search!="allsearch"'>
+				${search} like '%'||#{keyword,jdbcType=VARCHAR}||'%'
+			</if>
+			<if
+				test='keyword!=null &amp;&amp; keyword!="" &amp;&amp; search=="allsearch"'>
+				title like '%'||#{keyword,jdbcType=VARCHAR}||'%' or
+				content like
+				'%'||#{keyword,jdbcType=VARCHAR}||'%'
+			</if>
+			<if test='region!=null and region!=""'>
+				<if test='keyword!=null &amp;&amp; keyword!=""'>and </if>
+				region=#{region,jdbcType=VARCHAR}
+			</if>
+		</where>
+	</select>
+
+
+	<!-- id, title, content, allsearch -->
+	<select id="getBoardList" parameterType="sober.model.Party"
+		resultType="sober.model.Party">
+		select * from ( select rownum r, sub.* from (
+		select * from party_board
+		<where>
+			<if
+				test='keyword!=null &amp;&amp; keyword!="" &amp;&amp; search!="allsearch"'>
+				${search} like '%'||#{keyword,jdbcType=VARCHAR}||'%'
+			</if>
+			<if
+				test='keyword!=null &amp;&amp; keyword!="" &amp;&amp; search=="allsearch"'>
+				title like '%'||#{keyword,jdbcType=VARCHAR}||'%' or
+				content like
+				'%'||#{keyword,jdbcType=VARCHAR}||'%'
+			</if>
+			<if test='region!=null and region!=""'>
+				<if test='keyword!=null &amp;&amp; keyword!=""'>and </if>
+				region=#{region,jdbcType=VARCHAR}
+			</if>
+		</where>
+		order by reg_date desc) sub )
+		where r between #{startRow} and #{endRow}
+	</select>
+
+
+	<!-- <select id="getReplyCount" parameterType="int" resultType="int"> select 
+		count(*) from party_re_board where bo_num = #{bo_num} </select> -->
+
+	<select id="getPartyBoard" parameterType="int"
+		resultType="sober.model.Party">
+		select * from party_board where bo_num = #{bo_num}
+	</select>
+
+	<update id="readupdate" parameterType="int">
+		update party_board set
+		readcount = readcount+1 where bo_num = #{bo_num}
+	</update>
+
+    <select id="getMemberProfile" parameterType="java.lang.String" resultType="java.lang.String">
+       select profile_img from tbl_profile where nickname = #{attribute}
+    </select>
+
+    <select id="getMemberJumin" parameterType="java.lang.String" resultType="java.lang.String">
+        select jumin1||'-'||jumin2 from member where nickname = #{nickname}
+    </select>
+    
+    <select id="getMember" parameterType="java.lang.String" resultType="sober.model.PartyMemInfo">
+        select jumin1||'-'||jumin2 as jumin, gender from member where nickname = #{nickname}
+    </select>
+
+    <!-- 원문 파티 게시글 삭제  -->
+    <delete id="boardDelete" parameterType="sober.model.Party">
+       delete from party_board where bo_num = #{bo_num}
+    </delete>
+
+    <update id="par_update" parameterType="sober.model.Party">
+       update party_board set location=#{location},schedule=#{schedule},age=#{age},num_of_people=#{num_of_people},
+       gender=#{gender},title=#{title},content=#{content},reg_date=sysdate,bar_name=#{bar_name,jdbcType=VARCHAR},
+       region=#{region} where bo_num = #{bo_num}
+    </update>
+
+
+     <!--  해당 파티가 마감됐는지 확인을 위해서 timestamp를 리턴한다.  -->
+     <select id="getPartySchedule" parameterType="int" resultType="java.sql.Timestamp">
+        select schedule from party_board where bo_num = #{bo_num}
+     </select>
+
+
+
+
+    <!--  여기는 아래부터는 Alarm 설정  -->
+    <insert id="applyAlarm" parameterType="sober.model.AlarmDTO">
+       insert into alarm_board values(alarm_num_seq.nextval,#{receiver_nickname},1,sysdate,'N',#{board_pk},#{sender_nickname})
+    </insert>
+
+    <!--  정원이 꽉 찼을 때 보내는 알림 -->
+    <insert id="sendCapacityFullAlert" parameterType="sober.model.AlarmDTO">
+       insert into alarm_board values(alarm_num_seq.nextval,#{receiver_nickname},4,sysdate,'N',#{board_pk},'관리자')
+    </insert>
+    
+    <!--  취소시 파티 테이블의 num_limit을 기본값 1에서 0으로 변경 -->
+    <update id="updateNumLimit" parameterType="int">
+       update party_board set num_limit = 1 where bo_num = #{bo_num}
+    </update>
+    
+    <update id="updateNumLimitZero" parameterType="int">
+       update party_board set num_limit = 0 where bo_num = #{bo_num}
+    </update> 
+    
+        <!--  파티원이 참가 취소한 경우 -->
+    <insert id="sendCancel" parameterType="sober.model.AlarmDTO">
+       insert into alarm_board values(alarm_num_seq.nextval,#{receiver_nickname},
+       5,sysdate,'N',#{board_pk},#{sender_nickname})
+    </insert>
+    
+    <select id="getNickname" parameterType="int" resultType="java.lang.String">
+       select nickname from party_board where bo_num = #{bo_num}
+    </select>
+    
+    <!-- 참가 수락시 수락되었다는 알림을 보낸다.  -->
+    <insert id="sendAcceted" parameterType="sober.model.AlarmDTO">
+       insert into alarm_board values(alarm_num_seq.nextval,#{receiver_nickname},
+       6,sysdate,'N',#{board_pk},#{sender_nickname})
+    </insert>
+
+
+    <!--  참가 거절당하면 보내는 알림 -->
+    <insert id="sendDeclined" parameterType="sober.model.AlarmDTO">
+          insert into alarm_board values(alarm_num_seq.nextval,#{receiver_nickname},
+       7,sysdate,'N',#{board_pk},#{sender_nickname})
+    </insert>
+    
+    <!--  파티 완전 취소되는 경우 모든 파티원에게 알림을 보낸다. 파티장을 제외하고 보낸다.  -->
+    <insert id="sendPartyCancel" parameterType="sober.model.AlarmDTO">
+          insert into alarm_board values(alarm_num_seq.nextval,#{receiver_nickname},
+       14,sysdate,'N',#{board_pk},#{sender_nickname}) 
+    </insert>
+    
+    
+    
+
+</mapper>

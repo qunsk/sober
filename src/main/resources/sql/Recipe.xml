@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.RecipeMapper">
+
+	<!-- 주재료 카테고리(DB에 저장된 값 불러오기) -->
+	<select id="ctg" parameterType="sober.model.Category" resultType="sober.model.Category">
+		select * from recipe_category
+	</select>
+
+	<!-- 목록페이지 재료 해쉬태그 -->
+	<select id="hash"  parameterType="sober.model.Recipe" resultType="sober.model.List">
+		select r_num, rc_num, division, title from recipe_board join recipe_material using (r_num) 
+			join recipe_category using (rc_num) order by r_num, rc_num
+	</select>
+
+	<!-- Recipe 게시판 메인 리스트 (목록 페이지) -->
+	<select id="list" parameterType="sober.model.Recipe" resultType="sober.model.Recipe">
+		select * from(select rowNum ro, a.*
+		from (select row_number() over(partition by r_num order by r_num desc) as rn, b.*
+	      		from (select rb.r_num, rb.nickname, pro.profile_img, rb.cocktail_name, rb.flavor, rb.like_count, rb.readcount, rrb.replycount, rm.rc_num, rm.product, rv.abv_result, rb.register,rb.img_url
+						from recipe_board rb
+						join recipe_material rm on rb.r_num = rm.r_num
+						join (select r_num, round(sum(abv * volume) / sum(volume),1) abv_result
+		   						from recipe_material group by r_num) rv on rb.r_num = rv.r_num
+		   				left join (select r_num, count(*) replycount from recipe_re_board group by r_num)rrb on rb.r_num = rrb.r_num
+		   				left join (select profile_img, nickname from tbl_profile) pro on rb.nickname = pro.nickname
+						order by r_num desc) b
+						<where>
+							<!-- 검색 키워드가 있는 경우 -->
+							<if test="keyword != null and keyword != ''">
+								(nickname like '%'||#{keyword}||'%' 
+								or cocktail_name like '%'||#{keyword}||'%' 
+								or product like '%'||#{keyword}||'%')
+								<choose>
+									<!-- 검색 유형 있을 때 -->
+									<when test="search_f != null and search_f != ''">
+										and flavor like '%'||#{search_f}||'%'
+									</when>
+									<when test="search_m != null and search_m != ''">
+										and rc_num=#{search_m}
+									</when>
+									<when test="search_abv != null and search_abv != ''">
+										<if test="search_abv == 1">
+											and abv_result = 0
+										</if>
+										<if test="search_abv == 2">
+											and abv_result &lt;= 4.9
+										</if>
+										<if test="search_abv == 3">
+											and abv_result between 5 and 9.9
+										</if>
+										<if test="search_abv == 4">
+											and abv_result between 10 and 19.9
+										</if>
+										<if test="search_abv == 5">
+											and abv_result between 20 and 29.9
+										</if>
+										<if test="search_abv == 6">
+											and abv_result &gt;= 30
+										</if>
+									</when>
+								</choose>
+							</if>
+							<!-- 검색 키워드가 없는 경우 -->
+							<if test="search_f != null and search_f != ''">
+								and flavor like '%'||#{search_f}||'%'
+							</if>
+							<if test="search_m != null and search_m != ''">
+								and rc_num=#{search_m}
+							</if>
+							<if test="search_abv != null and search_abv != ''">
+								<if test="search_abv == 1">
+									and abv_result = 0
+								</if>
+								<if test="search_abv == 2">
+									and abv_result &lt;= 4.9
+								</if>
+								<if test="search_abv == 3">
+									and abv_result between 5 and 9.9
+								</if>
+								<if test="search_abv == 4">
+									and abv_result between 10 and 19.9
+								</if>
+								<if test="search_abv == 5">
+									and abv_result between 20 and 29.9
+								</if>
+								<if test="search_abv == 6">
+									and abv_result &gt;= 30
+								</if>
+							</if>
+						</where>
+					)a where rn=1
+		 )where ro between #{startRow} and #{endRow}
+	</select>
+	
+	<!-- 총 데이터 수 출력 -->
+	<select id="getTotal" parameterType="sober.model.Recipe" resultType="java.lang.Integer">
+		select count(*) from(select rowNum ro, a.*
+		from (select row_number() over(partition by r_num order by r_num desc) as rn, b.*
+       			from (select rb.r_num, rb.nickname, rb.cocktail_name, rb.flavor, rm.rc_num, rm.product, rv.abv_result
+						from recipe_board rb
+						join recipe_material rm on rb.r_num = rm.r_num
+						join (select r_num, round(sum(abv * volume) / sum(volume),1) abv_result
+     							 from recipe_material group by r_num) rv on rb.r_num = rv.r_num
+						order by r_num desc) b
+						<where>
+							<!-- 검색 키워드가 있는 경우 -->
+							<if test="keyword != null and keyword != ''">
+								(nickname like '%'||#{keyword}||'%' 
+								or cocktail_name like '%'||#{keyword}||'%' 
+								or product like '%'||#{keyword}||'%')
+								<choose>
+									<!-- 검색 유형 있을 때 -->
+									<when test="search_f != null and search_f != ''">
+										and flavor like '%'||#{search_f}||'%'
+									</when>
+									<when test="search_m != null and search_m != ''">
+										and rc_num=#{search_m}
+									</when>
+									<when test="search_abv != null and search_abv != ''">
+										<if test="search_abv == 1">
+											and abv_result = 0
+										</if>
+										<if test="search_abv == 2">
+											and abv_result &lt;= 4.9
+										</if>
+										<if test="search_abv == 3">
+											and abv_result between 5 and 9.9
+										</if>
+										<if test="search_abv == 4">
+											and abv_result between 10 and 19.9
+										</if>
+										<if test="search_abv == 5">
+											and abv_result between 20 and 29.9
+										</if>
+										<if test="search_abv == 6">
+											and abv_result &gt;= 30
+										</if>
+									</when>
+								</choose>
+							</if>
+							<!-- 검색 키워드가 없는 경우 -->
+							<if test="search_f != null and search_f != ''">
+								and flavor like '%'||#{search_f}||'%'
+							</if>
+							<if test="search_m != null and search_m != ''">
+								and rc_num=#{search_m}
+							</if>
+							<if test="search_abv != null and search_abv != ''">
+								<if test="search_abv == 1">
+									and abv_result = 0
+								</if>
+								<if test="search_abv == 2">
+									and abv_result &lt;= 4.9
+								</if>
+								<if test="search_abv == 3">
+									and abv_result between 5 and 9.9
+								</if>
+								<if test="search_abv == 4">
+									and abv_result between 10 and 19.9
+								</if>
+								<if test="search_abv == 5">
+									and abv_result between 20 and 29.9
+								</if>
+								<if test="search_abv == 6">
+									and abv_result &gt;= 30
+								</if>
+							</if>
+						</where>
+		)a where rn=1)
+	</select>
+
+	<!-- 조회수 증가 -->
+	<update id="readUp" parameterType="java.lang.Integer">
+		update recipe_board set readcount=readcount+1 where r_num=#{r_num}
+	</update>
+
+	<!-- Recipe 게시판 상세 리스트 (상세페이지) -->
+	<select id="mclist" parameterType="sober.model.Material" resultType="sober.model.ViewList">
+		select * from recipe_material join recipe_category using (rc_num) where r_num=#{r_num}
+	</select>
+
+	<!-- 도수 계산 -->
+	<select id="abv_result" parameterType="sober.model.Material" resultType="double">
+		select round(sum(abv * volume) / sum(volume),1) from recipe_material  where r_num = #{r_num}
+	</select>
+
+	<!-- r_num -->
+	<select id="select" parameterType="java.lang.Integer" resultType="sober.model.Recipe">
+		select * from recipe_board where r_num=#{r_num}
+	</select>
+
+	<!-- nickname -->
+	<select id="boNick" parameterType="java.lang.Integer" resultType="java.lang.String">
+		select nickname from recipe_board where r_num=#{r_num}
+	</select>
+	
+	<!-- 프로필 사진 불러오기 -->
+	<select id="getMemberProfile" parameterType="java.lang.String" resultType="java.lang.String">
+		select profile_img from tbl_profile where nickname=#{attribute}	
+	</select>
+	
+<!-- 짠근쓰 -->
+	<insert id="insertRecipe" parameterType="sober.model.Recipe"> 
+		<selectKey order="BEFORE" keyProperty="r_num" resultType="java.lang.Integer">
+           SELECT recipe_board_seq.nextval FROM dual
+		</selectKey>
+		INSERT INTO recipe_board
+		VALUES ( #{r_num}, #{flavor}, #{cocktail_name}, #{detail}, #{img_url}, sysdate, 0, #{nickname}, 0) 
+	</insert>
+
+	<insert id="insertMaterial" parameterType="sober.model.Material"> 
+		INSERT INTO recipe_material
+		VALUES (recipe_material_seq.nextval, #{r_num}, #{rc_num}, #{product}, #{abv}, #{volume})
+	</insert>
+	
+	<select id="getLastMaterialNum" resultType="java.lang.Integer"> 
+		SELECT rm_num FROM ( SELECT rm_num FROM recipe_material ORDER BY rm_num DESC ) WHERE ROWNUM = 1 
+	</select>
+
+	<!--  주재료 카테고리(DB에 저장된 값 불러오기)  -->
+	<select id="ctgList" parameterType="sober.model.Category" resultType="sober.model.Category"> 
+		select * from recipe_category 
+	</select>
+
+	<!--  Recipe 게시판 상세 리스트 (상세페이지)  -->
+	<select id="mlistMain" parameterType="sober.model.Material" resultType="sober.model.Material"> 
+		select * from recipe_material join recipe_category using (rc_num) where r_num=#{r_num} and division = 1 
+	</select>
+
+	<!--  Recipe 게시판 상세 리스트 (상세페이지)  -->
+	<select id="mlistSub" parameterType="sober.model.Material" resultType="sober.model.Material"> 
+		select * from recipe_material join recipe_category using (rc_num) where r_num=#{r_num} and division = 2 
+	</select>
+	
+	<!-- 이전 이미지 파일 이름 찾기 -->
+	<select id="foundImgURL" parameterType="java.lang.Integer" resultType="java.lang.String">
+		select img_url from recipe_board where r_num=#{r_num}
+	</select>
+	
+	<update id="updateMaterial" parameterType="sober.model.Material"> 
+		UPDATE recipe_material 
+		SET rc_num=#{rc_num}, product=#{product}, abv=#{abv}, volume=#{volume} 
+		WHERE rm_num=#{rm_num}
+	</update>
+	
+	<update id="updateRecipe" parameterType="sober.model.Recipe"> 
+		UPDATE recipe_board
+		SET r_num=#{r_num}, flavor=#{flavor}, cocktail_name=#{cocktail_name}, detail=#{detail}, img_url=#{img_url}, register=sysdate
+		WHERE r_num=#{r_num}
+	</update>
+	
+	<delete id="deleteMaterial" parameterType="java.lang.Integer">
+		DELETE FROM recipe_material WHERE rm_num=#{rm_num}
+	</delete>
+	
+	<delete id="deleteRecipe" parameterType="java.lang.Integer">
+		DELETE FROM recipe_board WHERE r_num=#{r_num}
+	</delete>
+	
+</mapper>
+

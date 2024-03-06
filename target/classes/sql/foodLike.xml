@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.foodDao">
+
+	<!-- 좋아요 정보 가져 오기 -->
+	<select id="heart_sel" parameterType="sober.model.foodLikeModel" resultType="sober.model.foodLikeModel">
+		select f_num from food_like where nickname = #{nickname,jdbcType=VARCHAR}
+	</select>
+
+	<!-- 좋아요 여부 확인 -->
+	<select id="heart_check" parameterType="sober.model.foodLikeModel" resultType="int">
+		select count(*) from food_like where f_num = #{f_num} and nickname = #{nickname,jdbcType=VARCHAR}
+	</select>
+
+	<!-- 좋아요 반영 -->
+	<insert id="heart_save" parameterType="sober.model.foodLikeModel">
+		insert into food_like values (#{f_num}, #{nickname}, sysdate)
+	</insert>
+	
+	<!-- 좋아요 수 증가 -->
+	<update id="heart_up" parameterType="sober.model.foodBoardModel">
+		update food_board set like_count = like_count + 1 where f_num = #{f_num}
+	</update>
+	
+	<!-- 좋아요 취소 -->
+	<delete id="heart_remove" parameterType="sober.model.foodLikeModel">
+		delete from food_Like where f_num = #{f_num} and nickname = #{nickname}
+	</delete>
+	
+	<!-- 좋아요 수 뺌 -->
+	<update id="heart_down" parameterType="sober.model.foodBoardModel">
+		update food_board set like_count = like_count - 1 where f_num = #{f_num}
+	</update>
+	
+	<!-- 좋아요 수 가져 오기 -->
+	<select id="heart_count" parameterType="sober.model.foodBoardModel" resultType="sober.model.foodBoardModel">
+		select like_count from food_board where f_num = #{f_num}
+	</select>
+	
+	<!-- 좋아요 알람 insert -->
+	<insert id="heart_alarm" parameterType="sober.model.AlarmDTO">
+		insert into alarm_board values(alarm_num_seq.nextval, #{receiver_nickname}, 17, sysdate, 'N', #{board_pk}, #{sender_nickname})
+	</insert>
+	
+	<!-- 좋아요 알람 delete -->
+	<delete id="heart_alarm_del" parameterType="sober.model.AlarmDTO">
+		delete from alarm_board where read_yn='N' and board_pk=#{board_pk} and sender_nickname=#{sender_nickname}
+	</delete>
+	
+</mapper>
+

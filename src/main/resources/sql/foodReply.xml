@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.foodReplyDao">
+
+	<!-- 댓글 insert -->
+	<insert id="replyInsert" parameterType="sober.model.foodReplyModel">
+		insert into food_re_board values
+		
+		<choose>
+			<!-- 댓글인 경우 -->
+			<when test="re_ref == 0">
+				(food_re_board_seq.nextval,#{f_num},
+				#{nickname},#{content},sysdate,food_re_board_seq.nextval,#{re_step},'N')
+			</when>
+			<!-- 답글인 경우 -->
+			<when test="re_ref != 0">
+				(food_re_board_seq.nextval,#{f_num},
+				#{nickname},#{content},sysdate,#{re_ref},1,'N')
+			</when>
+		</choose>
+	</insert>
+	
+	<!--  원문의 ref값으로 해당 값을 가진 아이들 다들 re_step + 1 update한다.  -->
+    <update id="reLevelUp" parameterType="int">
+      update food_re_board set re_step = re_step + 1 where re_ref = #{re_ref} and re_step != 0
+    </update>
+
+	<!--  대댓글용 
+	<insert id="re_insert_re" parameterType="sober.model.PartyRe">
+	      insert into party_re_board values(par_re_num_seq.nextval,#{bo_num},#{nickname},#{content},sysdate,#{re_ref},1,'n')
+	</insert> -->
+
+	<!-- Recipe 게시판 댓글 리스트 -->
+	<select id="relist" parameterType="int" resultType="sober.model.foodReplyModel">
+		select * from food_re_board left join (select profile_img, nickname from tbl_profile) pro using(nickname)
+		where f_num=#{f_num} order by re_ref desc, re_step asc
+	</select>
+
+	<!-- 총 데이터 수 출력 -->
+	<select id="replyTotal" parameterType="sober.model.foodReplyModel" resultType="int">
+		select count(*) from food_re_board where f_num=#{f_num}
+	</select>
+	
+	<!-- 댓글 수정 -->
+	<update id="reUpCont" parameterType="sober.model.foodReplyModel">
+        update food_re_board set content = #{content} where re_num = #{re_num}
+    </update>
+	
+	<!-- 삭제 시킬 댓글이 대댓글이 없는 댓글인지 확인하는 용도 -->
+	<select id="getReReplyNum" parameterType="int" resultType="int">
+        select count(*) from food_re_board where re_ref=#{re_ref} and re_step>0
+    </select>
+	
+	<!-- 댓글 삭제 (업데이트) : 대댓글 있는 경우 -->
+	<update id="replyDelUp" parameterType="int">
+		update food_re_board set content='작성자에 의해 삭제된 글입니다.', del_yn='Y' where re_num=#{re_num}
+	</update>
+
+	<!-- 댓글 삭제 : 대댓글 없는 경우 & 대댓글인 경우 -->
+	<delete id="replyDel" parameterType="int">
+		delete from food_re_board where re_num=#{re_num}
+	</delete>
+	
+	<!-- 댓글 알림 -->
+   <insert id="reply_alarm" parameterType="sober.model.AlarmDTO">
+      insert into alarm_board values(alarm_num_seq.nextval, #{receiver_nickname}, 15, sysdate, 'N', #{board_pk}, #{sender_nickname})
+   </insert>
+
+  <!-- 대댓글 알림 -->   
+  <insert id="re_reply_alarm" parameterType="sober.model.AlarmDTO">
+      insert into alarm_board values(alarm_num_seq.nextval, #{receiver_nickname}, 16, sysdate, 'N', #{board_pk}, #{sender_nickname})
+   </insert>
+   
+   <!--댓글 작성자 닉네임 -->
+   <select id="getNick" parameterType="int" resultType="java.lang.String">
+      select nickname from food_re_board where re_ref=#{re_ref} and re_step=0
+   </select>
+   
+    <!-- 댓글 알림 삭제 -->
+   <delete id="reply_alarm_del" parameterType="sober.model.AlarmDTO">
+      delete from alarm_board where happen_time=(
+      select max(happen_time) from alarm_board 
+      where read_yn='N' and board_pk=#{board_pk} and sender_nickname=#{sender_nickname} and receiver_nickname=#{receiver_nickname} and comment_num=#{comment_num})
+   </delete> 
+
+
+</mapper>

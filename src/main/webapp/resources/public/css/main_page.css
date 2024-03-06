@@ -1,0 +1,53 @@
+/* swiper style */
+.swiper-container {
+	height: 420px;
+	margin: 0px;
+}
+
+.swiper-slide {
+	text-align: center;
+	display: flex; /* 내용을 중앙정렬 하기위해 flex 사용 */
+	align-items: center; /* 위아래 기준 중앙정렬 */
+	justify-content: center; /* 좌우 기준 중앙정렬 */
+}
+
+.swiper-slide img {
+	box-shadow: 0 0 5px #555;
+	max-width: 100%; /* 이미지 최대너비를 제한, 슬라이드에 이미지가 여러개가 보여질때 필요 */
+	/* 이 예제에서 필요해서 설정했습니다. 상황에따라 다를 수 있습니다. */
+}
+
+
+/* 메인 페이지 css */
+    .sb-main{
+            padding: 0px;
+            font-size: 12pt;
+            background-color: #f6f6f6;
+        }
+        .sb-main-mini-board-title{
+            font-size: 16pt;
+            font-weight: bold;
+            margin-left: 30px;
+            margin-top: 40px;
+            display: flex;
+            align-items: center;
+        }
+        tr td:nth-child(1), td:nth-child(3), td:nth-child(4){
+            text-align: center;
+        }
+        .sb-main-mini-board{
+            /* border: 5px solid #ece8e8;
+            border-radius: 8px; */
+            padding-bottom: 40px;
+            background-color: white;
+        }
+        .sb-main-mini-board table{
+            margin: 0 auto;
+        }
+        table th, td{
+            padding: 5px 15px;
+        }
+        thead{
+            border-bottom: 1.5px solid rgb(166, 163, 163);
+        }
+

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.NoticeDAO">
+	<insert id="insert" parameterType="sober.model.Notice">
+		insert into notice_board
+		values(notice_seq.nextval, #{notice_type},
+		#{notice_title},#{notice_content},sysdate,0)
+	</insert>
+
+	<select id="getNotice" resultType="int">
+		select count(*) from
+		notice_board
+		<where>
+			<if test='keyword != null and keyword != "" and search != "ti_con" and search != ""'>
+				AND ${search} like '%'||#{keyword}||'%'
+			</if>
+			<if test='keyword != null and keyword != "" and search == "ti_con"'>
+				AND (NOTICE_TITLE like '%'||#{keyword}||'%'
+				OR NOTICE_CONTENT
+				like '%'||#{keyword}||'%')
+			</if>
+			<if test="notice_type != null and notice_type != ''">
+				AND notice_type = #{notice_type}
+			</if>
+		</where>
+	</select>
+
+	<select id="noticelist" resultType="sober.model.Notice">
+		select * from(select rownum rn, n.* from(select * from notice_board
+		<where>
+			<if test='keyword != null and keyword != "" and search != "ti_con" and search != ""'>
+				AND ${search} like '%'||#{keyword}||'%'
+			</if>
+			<if test='keyword != null and keyword != "" and search == "ti_con"'>
+				AND (NOTICE_TITLE like '%'||#{keyword}||'%'
+				OR NOTICE_CONTENT
+				like '%'||#{keyword}||'%')
+			</if>
+			<if test="notice_type != null and notice_type != ''">
+				AND notice_type = #{notice_type}
+			</if>
+		</where>
+		order by NOTICE_TIME desc)n ) notice_board where rn between
+		#{startRow} and #{endRow}
+	</select>
+
+	<select id="select" parameterType="int" resultType="sober.model.Notice">
+		select * from notice_board where notice_no = #{notice_no}
+	</select>
+	
+	<update id="read" parameterType="int">
+		update notice_board set readcount = readcount+1 where notice_no = #{notice_no}
+	</update>
+	
+	<update id="update" parameterType="sober.model.Notice">
+		update notice_board set notice_type = #{notice_type},
+								notice_title = #{notice_title},
+								notice_content = #{notice_content}
+		where notice_no = #{notice_no}
+	</update>
+	
+	<delete id="delete" parameterType="int">
+        delete from notice_board where notice_no = #{notice_no} 	
+	</delete>
+</mapper>

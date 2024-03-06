@@ -1,0 +1,51 @@
+@charset "UTF-8";
+
+#delete_wrap {
+	margin-top: 100px;
+	margin-bottom: 100px;
+}
+
+.title1{
+	font-weight: bold;
+	font-size: 40px;
+}
+.title2{
+	font-weight: bold;
+	color: red;
+	font-size: 40px;
+}
+
+.title3{
+	font-weight: bold;
+}
+
+.passwd {
+	width: 400px;
+	height: 40px;
+	margin: 20px 0 0 0;
+} 
+
+.input1 {
+	width: 504px;
+	height: 40px;
+	margin: 15px;
+	background-color: #FF6C6C;
+	color: white;
+	font-size: 15pt;
+	font-weight: bold;
+	border: none;
+}
+
+.input2 {
+	width: 504px;
+	height: 40px;
+	background-color: #BDBDBD;
+	color: white;
+	font-size: 15pt;
+	font-weight: bold;
+	border: none;
+}
+
+
+
+

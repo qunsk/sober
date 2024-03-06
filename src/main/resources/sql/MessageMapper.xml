@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.MessageMapper">
+	
+	<select id="getReceiveList" resultType="sober.model.MessageDTO">
+		<![CDATA[
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM (SELECT * 
+				 	   FROM message
+				 	   WHERE receiver_nickname=#{nickname} 
+				 	   ORDER BY reg_date DESC) first
+				 WHERE rownum <= #{pageNum} * #{amount}
+				 )
+			WHERE rn > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+	
+	<select id="getReceiveTotal" resultType="int">
+		SELECT COUNT(*) FROM message WHERE receiver_nickname=#{nickname}
+	</select>
+	
+	<select id="getSendList" resultType="sober.model.MessageDTO">
+		<![CDATA[
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM (SELECT * 
+				 	   FROM message
+				 	   WHERE sender_nickname=#{nickname} 
+				 	   ORDER BY reg_date DESC) first
+				 WHERE rownum <= #{pageNum} * #{amount}
+				 )
+			WHERE rn > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+	
+	<select id="getSendTotal" resultType="int">
+		SELECT COUNT(*) FROM message WHERE sender_nickname=#{nickname}
+	</select>
+	
+	<select id="getUnreadTotal" resultType="int">
+		SELECT COUNT(*) FROM message WHERE receiver_nickname=#{nickname} AND read_yn='N'
+	</select>
+	
+	<!-- <insert id="replyMessage">
+		INSERT INTO message (message_num, receiver_nickname, sender_nickname, title, content, reg_date, read_yn, reply_yn)
+		VALUES (message_num_seq.nextval, #{receiver_nickname}, #{sender_nickname}, #{title}, #{content}, sysdate, 'N', 'N')
+	</insert> sendMessage랑 SQL 정확히 일치!! -->
+	
+	<select id="getMessage" resultType="sober.model.MessageDTO">
+		SELECT * FROM message WHERE message_num = #{message_num}
+	</select>
+	
+	<delete id="deleteMessage">
+		DELETE FROM message WHERE message_num = #{message_num}
+	</delete>
+	
+	<update id="changeReadYN">
+		UPDATE message SET read_yn='Y' WHERE message_num = #{message_num}
+	</update>
+	
+	<update id="changeReplyYN">
+		UPDATE message SET reply_yn='Y' WHERE message_num = #{old_message_num}
+	</update>
+	
+	<insert id="sendMessage">
+		<selectKey keyProperty="message_num" order="BEFORE" resultType="int">
+			SELECT alarm_num_seq.nextval FROM dual
+		</selectKey>
+		INSERT INTO message (message_num, receiver_nickname, sender_nickname, title, content, reg_date, read_yn, reply_yn)
+		VALUES (#{message_num}, #{receiver_nickname}, #{sender_nickname}, #{title}, #{content}, sysdate, 'N', 'N')
+	</insert>
+	
+	<insert id="alarmSendMessage">
+		INSERT INTO alarm_board (alarm_num, receiver_nickname, comment_num, happen_time, read_yn, board_pk, sender_nickname) 
+		VALUES (#{message_num}, #{receiver_nickname}, 8, sysdate, 'N', #{message_num}, #{sender_nickname})
+	</insert>
+	
+	<insert id="alarmReplyMessage">
+		INSERT INTO alarm_board (alarm_num, receiver_nickname, comment_num, happen_time, read_yn, board_pk, sender_nickname) 
+		VALUES (#{message_num}, #{receiver_nickname}, 9, sysdate, 'N', #{message_num}, #{sender_nickname})
+	</insert>
+	
+	<delete id="deleteMessageAlarm">
+		DELETE FROM alarm_board WHERE comment_num IN (8, 9) AND board_pk = #{message_num}
+	</delete>
+	
+</mapper>
+

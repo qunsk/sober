@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.AskMapper">
+
+	<!-- id 값은 매퍼 인터페이스와 매서드 이름과 같아야 한다. (get) -->
+	<select id="get" resultType="sober.model.AskDTO">
+		select * from ask_board where ask_no=#{ask_no}
+	</select>
+	
+	<insert id="post">
+		insert into ask_board (ask_no, ask_content, nickname, ask_date, ask_confirm)
+		values (ask_board_seq.nextval, #{ask_content}, #{nickname}, sysdate, 'n')		
+	</insert>
+	
+	<delete id="delete">
+		delete from ask_board where ask_no = #{ask_no}
+	</delete>
+	
+	<update id="modify">
+		UPDATE ask_board SET ask_content=#{ask_content} WHERE ask_no=#{ask_no}
+	</update>
+	
+	<select id="getList" resultType="sober.model.AskDTO">
+	<![CDATA[
+		SELECT *
+		FROM(SELECT ROWNUM rn, aaa.*
+     		 FROM(SELECT * FROM ask_board WHERE nickname = #{nickname} ORDER BY ask_date DESC) aaa)
+     	WHERE rn >= #{pageNum}*10-9 AND rn <= #{pageNum}*10
+     ]]>
+	</select>
+	
+	<select id="getListOrder" resultType="sober.model.AskDTO">
+	<![CDATA[
+		SELECT *
+		FROM(SELECT ROWNUM rn, aaa.*
+     		 FROM(SELECT * FROM ask_board WHERE nickname = #{nickname} ORDER BY ask_date ASC) aaa)
+     	WHERE rn >= #{pageNum}*10-9 AND rn <= #{pageNum}*10
+     ]]>       
+	</select>
+	
+	<select id="getTotal" resultType="int">
+		SELECT COUNT(*) FROM ask_board WHERE nickname=#{nickname}
+	</select>
+	
+	<select id="getReply" parameterType="int" resultType="java.lang.String">
+	   select ask_re_content from ask_re_board where ask_no = #{ask_no}
+	</select>
+	
+</mapper>

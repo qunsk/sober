@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.PartyReDAO">
+
+	<!--  원문 댓글용 -->
+	<insert id="re_insert" parameterType="sober.model.PartyRe">
+	      insert into party_re_board values(par_re_num_seq.nextval,#{bo_num},#{nickname},#{content},sysdate,par_re_num_seq.nextval,0,'n')
+	</insert>
+	
+
+    <!--  원문의 ref값으로 해당 값을 가진 아이들 다들 re_step + 1 update한다.  -->
+    <update id="re_step_update" parameterType="int">
+      update party_re_board set re_step = re_step + 1 where re_ref = #{re_ref} and re_step != 0
+    </update>
+
+	<!--  대댓글용 -->
+	<insert id="re_insert_re" parameterType="sober.model.PartyRe">
+	      insert into party_re_board values(par_re_num_seq.nextval,#{bo_num},#{nickname},#{content},sysdate,#{re_ref},1,'n')
+	</insert>
+	
+	
+	<!-- 
+	<select id="getPartyList" parameterType="int" resultType="sober.model.PartyRe">
+	    select re_num,nickname,reg_date,content,profile_img,re_step,re_ref from  party_re_board left outer join
+	     tbl_profile using(nickname) where bo_num = #{bo_num}  order by re_ref desc, re_step asc
+	</select>
+      -->
+	<!-- <select id="getPartyList" parameterType="int" resultType="sober.model.PartyRe">
+	    select re_num, party_re_board.nickname,reg_date,content,profile,re_step,re_ref from  party_re_board left outer join
+	     member using(nickname) where bo_num = #{bo_num}  order by re_ref desc, re_step asc
+	</select>-->
+	<select id="getPartyList" parameterType="int" resultType="sober.model.PartyRe">
+        select re_num,nickname, party_re_board.reg_date, content, profile_img, re_step, re_ref,re_del from party_re_board 
+        left outer join tbl_profile using (nickname) where bo_num = #{bo_num} order by re_ref desc, re_step asc
+    </select>
+    
+    <update id="re_update_con" parameterType="sober.model.PartyRe">
+        update party_re_board set content = #{content} where re_num = #{re_num}
+    </update>
+
+    <select id="getReReplyNum" parameterType="int" resultType="int">
+        select count(*) from party_re_board where re_ref=#{re_ref} and re_step>0
+    </select>
+
+    <delete id="deleteReply" parameterType="int">
+       delete from party_re_board where re_num = #{re_num}
+    </delete>
+    
+    <update id="deleteUpdateRe" parameterType="int">
+       update party_re_board set content='작성자에 의해 삭제된 글입니다. ', re_del='y' where re_num = #{re_num}
+    </update>
+    
+    <!--  하위 댓글 삭제시 실행되는 메소드로, 원문이 삭제된 글이면 원문도 삭제시킨다.  -->
+    <delete id="deleteReplyParent" parameterType="sober.model.PartyRe">
+      delete from party_re_board where re_ref=#{re_ref} and re_step=0 and re_del='y'
+    </delete>
+    
+    
+    
+    <!--   ................. 여기는 알람 관련 sql문 ................   -->
+    <insert id="replyinsertAlarm" parameterType="sober.model.AlarmDTO">
+       insert into alarm_board values(alarm_num_seq.nextval,#{receiver_nickname},2,
+       sysdate,'N',#{board_pk},#{sender_nickname})
+    </insert>
+    
+    <!--  원문댓글 작성자의 닉네임 값을 리턴한다.  -->
+    <select id="getNickname" parameterType="int" resultType="java.lang.String">
+       select nickname from party_re_board where re_ref=#{re_ref} and re_step=0
+    </select>
+    
+    <!--  대댓이 달리면 댓글 작성자에게 알림을 보낸다. -->
+    <insert id="reReplyinsertAlarm" parameterType="sober.model.AlarmDTO">
+       insert into alarm_board values(alarm_num_seq.nextval,#{receiver_nickname},
+       3,sysdate,'N',#{board_pk},#{sender_nickname})
+    </insert>
+    
+    <!--  댓글 삭제시 댓글이 달렸습니다! 알림 삭제  -->
+    <delete id="deleteReplyAlarm" parameterType="sober.model.AlarmDTO">
+      delete alarm_board where alarm_num = (select max(alarm_num) from alarm_board where 
+      comment_num = #{comment_num} and board_pk = #{board_pk} and read_yn = 'N' )
+    </delete>
+
+	
+</mapper>

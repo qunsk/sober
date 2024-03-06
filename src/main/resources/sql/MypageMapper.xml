@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.MypageMapper">
+
+
+	<!-- 프로필 관련 SQL -->
+	
+	<select id="getProfile" resultType="sober.model.ProfileDTO">
+		SELECT * FROM tbl_profile WHERE nickname=#{nickname}
+	</select>
+	
+	<update id="modifyProfile">
+		UPDATE tbl_profile SET mbti=#{mbti}, mbtiyn=#{mbtiYN}, age=#{age}, ageyn=#{ageYN}, movie=#{movie}, movieyn=#{movieYN}, music=#{music}, musicyn=#{musicYN},
+                               strong=#{strong}, strongyn=#{strongYN}, state=#{state}, stateyn=#{stateYN}, insta=#{insta, jdbcType=VARCHAR}, 
+                               facebook=#{facebook, jdbcType=VARCHAR}, keyword=#{keyword, jdbcType=VARCHAR}, intro=#{intro, jdbcType=VARCHAR}, profile_img=#{profile_img}
+                           WHERE nickname=#{nickname}
+	</update>
+	
+	<!-- 프로필 관련 SQL END -->
+
+	
+	
+	<!-- 알람 관련 SQL START -->
+	
+	<select id="getAlarmTotal" resultType="int">
+		SELECT COUNT(*) FROM alarm_board WHERE receiver_nickname=#{nickname}
+	</select>
+	
+	<select id="getUnreadAlarmCount" resultType="int">
+		SELECT COUNT(*) FROM alarm_board WHERE receiver_nickname=#{nickname} AND read_yn='N'
+	</select>
+	
+	<select id="getAlarmList" resultType="sober.model.AlarmListMaker">
+		<![CDATA[
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM ( SELECT a.alarm_num, a.receiver_nickname, a.comment_num, a.happen_time, a.read_yn, a.board_pk, b.comment_msg, b.table_url, a.sender_nickname
+						FROM alarm_board a, comment_board b
+						WHERE a.comment_num = b.comment_num AND a.receiver_nickname=#{nickname}
+						ORDER BY happen_time DESC) first
+				 WHERE rownum <= #{pageNum} * #{amount}
+				 )
+			WHERE rn > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+	
+	<delete id="deleteAlarm">
+		DELETE FROM alarm_board WHERE alarm_num=#{alarm_num}
+	</delete>
+	
+	<update id="readAlarm">
+		UPDATE alarm_board SET read_yn='Y' WHERE alarm_num=#{alarm_num}
+	</update>
+	
+	
+	<!-- 알람 관련 SQL END -->
+	
+	
+	<!-- 참가중인 모임 일자 뽑는 SQL START -->
+	<select id="getSchedules" parameterType="String" resultType="sober.model.PartyScheduleDTO">
+		SELECT bo_num, location, TO_CHAR(schedule, 'DD') party_date
+		FROM party_board
+		WHERE bo_num IN (SELECT bo_num FROM party_member_list WHERE nickname=#{nickname} AND status='accepted')
+			AND EXTRACT(YEAR FROM schedule) = #{year} AND EXTRACT(MONTH FROM schedule) = #{month}
+	</select>
+	<!-- 참가중인 모임 일자 뽑는 SQL END -->
+	
+	<!-- 참가중인 모임 리스트 START -->
+	<select id="getAttendingPartyList" resultType="sober.model.Party">
+		<![CDATA[
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM ( SELECT *
+						FROM party_board
+						WHERE bo_num IN (SELECT bo_num FROM party_member_list WHERE nickname=#{nickname})
+						ORDER BY reg_date DESC) first
+				 WHERE rownum <= #{pageNum} * #{amount}
+				 )
+			WHERE rn > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+	<select id="getAttendingPartyTotal" resultType="int">
+		SELECT COUNT(*) FROM party_board WHERE  bo_num IN (SELECT bo_num FROM party_member_list WHERE nickname=#{nickname})
+	</select>
+	<!-- 참가중인 모임 리스트 END-->
+	
+	<!-- 활동 내역 뽑는 SQL -->
+	
+	<!-- 1. 내가 작성한 게시물(매개변수 : pagingCriteria) -->
+	<select id="getMyPostList" resultType="sober.model.ActiveDTO">
+		<![CDATA[
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM ( SELECT r_num pk_num, cocktail_name title, register regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=1) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=1) table_url
+						FROM recipe_board
+						WHERE nickname=#{nickname}
+						UNION
+						SELECT bo_num pk_num, title, reg_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=2) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=2) table_url
+						FROM party_board
+						WHERE nickname=#{nickname}
+						UNION
+						SELECT f_num pk_num, title, reg_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=3) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=3) table_url
+						FROM food_board
+						WHERE nickname=#{nickname}
+						UNION
+						SELECT ask_no pk_num, '1:1 문의 합니다.' title, ask_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=4) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=4) table_url
+						FROM ask_board
+						WHERE nickname=#{nickname}
+						ORDER BY regdate DESC) first
+				 WHERE rownum <= #{pageNum} * #{amount}
+				 )
+			WHERE rn > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+	<select id="getMyPostTotal" resultType="int">
+		SELECT COUNT(*) FROM ( SELECT r_num pk_num, cocktail_name title, register regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=1) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=1) table_url
+								FROM recipe_board
+								WHERE nickname=#{nickname}
+								UNION
+								SELECT bo_num pk_num, title, reg_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=2) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=2) table_url
+								FROM party_board
+								WHERE nickname=#{nickname}
+								UNION
+								SELECT f_num pk_num, title, reg_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=3) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=3) table_url
+								FROM food_board
+								WHERE nickname=#{nickname}
+								UNION
+								SELECT ask_no pk_num, '1:1 문의 합니다.' title, ask_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=4) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=4) table_url
+								FROM ask_board
+								WHERE nickname=#{nickname} )
+	</select>
+	
+	
+	<!-- 2. 좋아요 누른 게시물(매개변수 : pagingCriteria) -->
+	<select id="getMyLikePostList" resultType="sober.model.ActiveDTO">
+		<![CDATA[
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM ( SELECT r_num pk_num, cocktail_name title, register regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=1) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=1) table_url
+						FROM recipe_board
+						WHERE r_num IN (SELECT r_num FROM heart WHERE nickname=#{nickname})
+						UNION
+						SELECT f_num pk_num, title, reg_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=3) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=3) table_url
+						FROM food_board
+						WHERE f_num IN (SELECT f_num FROM food_like WHERE nickname=#{nickname})
+						ORDER BY regdate DESC) first
+				 WHERE rownum <= #{pageNum} * #{amount}
+				 )
+			WHERE rn > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+	<select id="getMyLikePostTotal" resultType="int">
+		SELECT COUNT(*) FROM ( SELECT r_num pk_num, cocktail_name title, register regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=1) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=1) table_url
+								FROM recipe_board
+								WHERE r_num IN (SELECT r_num FROM heart WHERE nickname=#{nickname})
+								UNION
+								SELECT f_num pk_num, title, reg_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=3) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=3) table_url
+								FROM food_board
+								WHERE f_num IN (SELECT f_num FROM food_like WHERE nickname=#{nickname}) )
+	</select>
+	
+	
+	<!-- 3. 내가 작성한 댓글이 있는 게시물(매개변수 : pagingCriteria) -->
+	<select id="getMyReplyList" resultType="sober.model.ActiveDTO">
+		<![CDATA[
+			SELECT *
+			FROM(SELECT ROWNUM rn, first.*
+				 FROM ( SELECT DISTINCT r_num pk_num, cocktail_name title, register regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=1) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=1) table_url
+						FROM recipe_board
+						WHERE r_num IN (SELECT r_num FROM recipe_re_board WHERE nickname=#{nickname})
+						UNION
+						SELECT DISTINCT bo_num pk_num, title, reg_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=2) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=2) table_url
+						FROM party_board
+						WHERE bo_num IN (SELECT bo_num FROM party_re_board WHERE nickname=#{nickname})
+						UNION
+						SELECT DISTINCT f_num pk_num, title, reg_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=3) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=3) table_url
+						FROM food_board
+						WHERE f_num IN (SELECT f_num FROM food_re_board WHERE nickname=#{nickname})
+						ORDER BY regdate DESC) first
+				 WHERE rownum <= #{pageNum} * #{amount}
+				 )
+			WHERE rn > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+	<select id="getMyReplyTotal" resultType="int">
+		SELECT COUNT(*) FROM ( SELECT DISTINCT r_num pk_num, cocktail_name title, register regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=1) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=1) table_url
+								FROM recipe_board
+								WHERE r_num IN (SELECT r_num FROM recipe_re_board WHERE nickname=#{nickname})
+								UNION
+								SELECT DISTINCT bo_num pk_num, title, reg_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=2) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=2) table_url
+								FROM party_board
+								WHERE bo_num IN (SELECT bo_num FROM party_re_board WHERE nickname=#{nickname})
+								UNION
+								SELECT DISTINCT f_num pk_num, title, reg_date regdate, nickname, (SELECT table_name FROM tbl_table WHERE table_num=3) table_name,  (SELECT table_url FROM tbl_table WHERE table_num=3) table_url
+								FROM food_board
+								WHERE f_num IN (SELECT f_num FROM food_re_board WHERE nickname=#{nickname}) )
+	</select>
+	
+	<select id="checkUnsigned" resultType="String">
+		SELECT state FROM member WHERE nickname=#{nickname}
+	</select>
+	
+</mapper>
+

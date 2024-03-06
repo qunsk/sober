@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.foodDao">
+
+<!-- 	<insert id="foodInsert"
+		parameterType="sober.model.foodBoardModel">
+		insert into food_board (f_num, nickname, title, content, reg_date, img,
+		readcount)
+		values (food_board_seq.nextval, #{nickname}, #{title}, #{content}, sysdate,
+		#{img, jdbcType=VARCHAR},0)
+	</insert> -->
+
+	<!-- 게시글 작성 -->
+	<insert id="foodinsert_new" parameterType="sober.model.foodBoardModel">
+    	<selectKey keyProperty="f_num" order="BEFORE" resultType="int">
+        	select food_board_seq.nextval from dual
+    	</selectKey>
+    		insert into food_board (f_num, nickname, title, content, reg_date, img, readcount)
+    		values (#{f_num}, #{nickname}, #{title}, #{content}, sysdate, #{img, jdbcType=VARCHAR}, 0)
+	</insert>
+
+
+	<!-- 페이징 처리 -->
+	<select id="getTotal" parameterType="sober.model.foodBoardModel"
+		resultType="int">
+		select count(*) from food_board
+		<where>
+			<if test="keyword !=null and search != 'subcon'">
+				${search} like '%'||#{keyword}||'%'
+			</if>
+			<if test="keyword !=null and search == 'subcon'">
+				title like '%'||#{keyword}||'%' or
+				content like '%'||#{keyword}||'%'
+			</if>
+		</where>
+	</select>
+
+	<!-- 목록 데이터 -->
+	<select id="foodlist" parameterType="sober.model.foodBoardModel"
+		resultType="sober.model.foodBoardModel">
+		select * from (select a.*, rowNum rn from(
+		select * from food_board fb
+		left join(select f_num, count(*) replycount from food_re_board group by f_num)rfb using(f_num)
+		left join(select profile_img, nickname from tbl_profile) pro using(nickname) 
+		<where>
+			<if test="keyword != null and search != 'subcon'">
+				${search} like '%'||#{keyword}||'%'
+			</if>
+			<if test="keyword !=null and search == 'subcon'">
+				title like '%'||#{keyword}||'%' or
+				content like '%'||#{keyword}||'%'
+			</if>
+		</where>
+			order by reg_date desc) a )
+			where rn between #{startRow} and #{endRow}
+	</select>
+	
+	<!-- 상세 페이지 -->
+	<select id="select" parameterType="int" resultType="sober.model.foodBoardModel">
+		select * from food_board where f_num=#{f_num}
+	</select>
+
+	<!-- 조회수 증가 -->
+	<update id="readUp" parameterType="int">
+		update food_board set
+		readcount=readcount+1 where f_num=#{f_num}
+	</update>
+
+	<!-- 프로필 사진 불러오기 -->
+	<select id="getMemberProfile" parameterType="String"
+		resultType="String">
+		select profile_img from tbl_profile where
+		nickname=#{attribute}
+	</select>
+
+	<!-- 작성자 -->
+	<select id="user" parameterType="int"
+		resultType="sober.model.foodBoardModel">
+		select * from food_board where f_num=#{f_num}
+	</select>
+
+	<!-- 게시글 수정 -->
+	<update id="foodUpdate"
+		parameterType="sober.model.foodBoardModel">
+		update food_board set title=#{title},
+		content=#{content}, img=#{img, jdbcType=VARCHAR}
+		where f_num=#{f_num}
+	</update>
+	
+	<!-- 게시글 삭제 -->
+	<delete id="foodDelete" parameterType="int">
+		delete from food_board where f_num=#{f_num}
+	</delete>
+</mapper>

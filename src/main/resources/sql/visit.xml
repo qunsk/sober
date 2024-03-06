@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.VisitCountDAO">
+	<insert id="insert"
+		parameterType="sober.model.VisitCountVO">
+		insert into visit(visit_no, visit_ip, visit_time,
+		<if test="visit_ref != null and visit_ref !=''">
+			visit_ref,
+		</if>
+		visit_info
+		)
+		VALUES
+		(
+		VISIT_SEQ.NEXTVAL,#{visit_ip},SYSDATE,
+		<if test="visit_ref != null and visit_ref !=''">
+			#{visit_ref, jdbcType=VARCHAR},
+		</if>
+		#{visit_info}
+		)
+	</insert>
+	
+	<select id="mcount" resultType="Map">
+		select to_char(visit_time,'YY/MM') month, count(visit_no) count from visit 
+		where visit_time between sysdate-365 and sysdate
+		group by to_char(visit_time,'YY/MM') order by month
+	</select>
+	
+	<select id="iplist" resultType="sober.model.VisitCountVO" >
+		select * from visit where to_char(visit_time,'YY/MM/DD')=to_char(sysdate,'YY/MM/DD')
+	</select>
+	
+	<select id="host" resultType="int" >
+		select count(*) from visit where not visit_ref like '%naver%' and not visit_ref like '%google%'
+	</select>
+	
+	<select id="naver" resultType="int" >
+		select count(*) from visit where visit_ref like '%naver%'
+	</select>
+	
+	<select id="google" resultType="int" >
+		select count(*) from visit where visit_ref like '%google%'
+	</select>
+	
+</mapper>

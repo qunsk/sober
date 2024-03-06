@@ -1,0 +1,90 @@
+.main {
+	margin-top: 100px;
+}
+
+.main .button{
+	border: none;
+	width: 120px;
+	height: 35px;
+	border-radius: 5px;
+	background-color: black;
+	color: white;
+	font-weight: bold;	
+}
+.main .resetBtn{
+	margin-bottom: 80px;
+	width: 150px;
+	height: 50px;
+	border: none;
+	background-color: black;
+	color : #D9FF2A;
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.main .submitBtn{
+	width: 150px;
+	height: 50px;
+	border: none;
+	background-color: #D9FF2A;
+	color : black;
+	font-size: 20px;
+	font-weight: bold;
+	margin: 100 0 0 225px;
+}
+
+.main .input {
+	width: 300px;
+	display: inline !important;
+} 
+
+.main .input2 {
+	width: 140px;
+	display: inline !important;
+}
+
+.main .input3 {
+	width: 140px;
+	display: inline !important;
+}
+
+.main .input4 {
+	width: 40px;
+	display: inline !important;
+}
+
+.join_form {
+	border: 1px solid #ccc;
+	border-top: none;
+	border-left: none;
+	border-right: none;
+	padding: 40px 0px 40px 0px;
+}
+
+.mail{
+	width: 140px !important;
+	display: inline !important;
+}
+
+.region {
+	width: 140px !important;
+	display: inline !important;
+}
+
+.sub_region {
+	width: 140px !important;
+	display: inline !important;
+}
+
+.partyradio {
+	accent-color: #4880E0;
+	width: 15px;
+	height: 15px;
+}
+
+.genderbox {
+	border: none;
+	display: inline;
+	margin-left: 30px;
+	font-size: 11pt;
+}

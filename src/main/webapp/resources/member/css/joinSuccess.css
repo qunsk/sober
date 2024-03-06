@@ -1,0 +1,30 @@
+.main{
+	margin-top: 100px;
+}
+
+.font1{
+	font-weight: bold;
+	font-size: 35px;
+}
+
+.mainBtn{
+	margin-bottom: 80px;
+	width: 150px;
+	height: 50px;
+	border: none;
+	background-color: black;
+	color : #D9FF2A;
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.loginBtn{
+	width: 150px;
+	height: 50px;
+	border: none;
+	background-color: #D9FF2A;
+	color : black;
+	font-size: 20px;
+	font-weight: bold;
+	margin: 100 0 0 225px;
+}  

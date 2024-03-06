@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.MasterAskDAO">
+
+	<select id="getTotal" resultType="int">
+		select count(*) from ask_board
+	</select>
+
+	<select id="list" parameterType="sober.model.MasterAsk" resultType="sober.model.MasterAsk">
+		select * from (select rownum rn,
+		a.* from ask_board a) left outer join
+		ask_re_board using(ask_no)
+		where rn between #{startRow} and #{endRow}  order by ask_date desc
+	</select>
+
+	<select id="select" parameterType="int"
+		resultType="sober.model.MasterAsk">
+		select * from ask_board
+		left join (select nickname,
+		profile_img from tbl_profile)
+		using(nickname)
+		where ask_no = #{ask_no}
+	</select>
+
+	<!-- 프로필 사진 불러오기 -->
+	<select id="getMemberProfile" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		select profile_img from tbl_profile where nickname=#{attribute}
+	</select>
+
+	<update id="see" parameterType="int">
+		update ask_board set ask_confirm
+		= 'Y' where ask_no = #{ask_no}
+	</update>
+
+	<select id="reselect" resultType="sober.model.ReAsk">
+		select * from ask_re_board re
+		INNER JOIN ask_board ask on ask.ask_no = re.ask_no
+		where re.ask_no =
+		#{ask_no}
+	</select>
+
+	<insert id="insert" parameterType="sober.model.ReAsk">
+		insert into ask_re_board
+		values(#{ask_re_content}, #{ask_no}, sysdate)
+	</insert>
+
+	<insert id="alert" parameterType="sober.model.MasterAsk">
+		insert into alarm_board
+		values(alarm_num_seq.nextval,#{nickname},18,sysdate,'N',#{ask_no},'관리자'
+		)
+	</insert>
+
+	<update id="check" parameterType="int">
+		update ask_board set
+		ask_confirm = 'Y' where ask_no = #{ask_no}
+	</update>
+
+
+</mapper>

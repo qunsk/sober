@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.RecipeMapper">
+
+	<!-- 좋아요 정보 가져 오기 -->
+	<select id="heart_sel" parameterType="sober.model.Heart" resultType="sober.model.Heart">
+		select r_num from heart where nickname = #{nickname,jdbcType=VARCHAR}
+	</select>
+
+	<!-- 좋아요 여부 확인 -->
+	<select id="heart_check" parameterType="sober.model.Heart" resultType="java.lang.Integer">
+		select count(*) from heart where r_num = #{r_num} and nickname = #{nickname,jdbcType=VARCHAR}
+	</select>
+
+	<!-- 좋아요 반영 -->
+	<insert id="heart_save" parameterType="sober.model.Heart">
+		insert into heart values (#{r_num}, #{nickname}, sysdate)
+	</insert>
+	
+	<!-- 좋아요 수 증가 -->
+	<update id="heart_up" parameterType="sober.model.Recipe">
+		update recipe_board set like_count = like_count + 1 where r_num = #{r_num}
+	</update>
+	
+	<!-- 좋아요 취소 -->
+	<delete id="heart_remove" parameterType="sober.model.Heart">
+		delete from heart where r_num = #{r_num} and nickname = #{nickname}
+	</delete>
+	
+	<!-- 좋아요 수 뺌 -->
+	<update id="heart_down" parameterType="sober.model.Recipe">
+		update recipe_board set like_count = like_count - 1 where r_num = #{r_num}
+	</update>
+	
+	<!-- 좋아요 수 가져 오기 -->
+	<select id="heart_count" parameterType="sober.model.Recipe" resultType="sober.model.Recipe">
+		select like_count from recipe_board where r_num = #{r_num}
+	</select>
+	
+	<!-- 좋아요 알람 insert -->
+	<insert id="heart_alarm" parameterType="sober.model.AlarmDTO">
+		insert into alarm_board values(alarm_num_seq.nextval, #{receiver_nickname}, 13, sysdate, 'N', #{board_pk}, #{sender_nickname})
+	</insert>
+	
+	<!-- 좋아요 알람 delete -->
+	<delete id="heart_alarm_del" parameterType="sober.model.AlarmDTO">
+		delete from alarm_board where read_yn='N' and board_pk=#{board_pk} and sender_nickname=#{sender_nickname}
+	</delete>
+	
+</mapper>
+

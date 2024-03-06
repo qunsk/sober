@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.MasterModeDAO">
+
+	<!-- 회원 정보 관리 -->
+	<select id="memberlist" resultType="sober.model.memberModel">
+		select * from(select slist.*, rownum rn from(
+		select * from member
+		<where>
+			<if test='keyword != null and state != "X"'>
+				${search} like '%'||#{keyword}||'%'
+				and
+			</if>
+			<if test='keyword != null and state == "X"'>
+				${search} like '%'||#{keyword}||'%'
+				and state = #{state}
+				and
+			</if>
+			<if test='keyword == null and state == "X"'>
+				state = #{state}
+				and
+			</if>
+			id != 'master' order by REG_DATE desc
+		</where>
+		) slist) member where rn between #{startRow} and #{endRow}
+	</select>
+
+	<select id="getTotal" parameterType="sober.model.memberModel"
+		resultType="int">
+		select count(*) from member
+		<where>
+			<if test='keyword != null and state == "X"'>
+				${search} like '%'||#{keyword}||'%' and state =
+				#{state}
+			</if>
+			<if test='keyword == null and state == "X"'>
+				state = #{state}
+			</if>
+			<if test='keyword != null and state != "X"'>
+				${search} like '%'||#{keyword}||'%'
+			</if>
+			and id != 'master'
+		</where>
+	</select>
+
+	<update id="update" parameterType="String">
+		update member set state =
+		'X'
+		where id = #{id}
+	</update>
+
+	<!-- 방문자 -->
+	<select id="graphlist" resultType="Map">
+		select count(*) COUNT from visit
+		<where> visit_time between ADD_MONTHS(sysdate-365, 9) and sysdate
+		</where>
+		group by to_char(visit_time,'YY/MM') order BY to_char(visit_time,'YY/MM')
+	</select>
+
+	<!-- 오늘 할 일 -->
+	<select id="unread" resultType="int">
+		select count(*) from ask_board
+		where ask_confirm = 'N'
+	</select>
+
+	<select id="noticeupdate" resultType="int">
+		SELECT TRUNC(SYSDATE) -
+		TRUNC(notice_time)
+		FROM (select * from notice_board order by
+		notice_time desc
+		) where rownum=1
+	</select>
+
+	<select id="recent" resultType="int">
+		SELECT SUM(cnt) AS total_count
+		FROM (
+		select count(*) AS cnt from party_board where reg_date >=
+		sysdate-1
+		union
+		select count(*) AS cnt from food_board where reg_date >=
+		sysdate-1
+		union
+		select count(*) AS cnt from recipe_board where register
+		>= sysdate-1
+		)
+	</select>
+	
+	<select id="asklist" resultType="sober.model.memberModel">
+		select * from (select rownum rn, a.* from ask_board a 
+		order by ask_date desc) where rn between 1 and 4
+	</select>
+	
+	<select id="recipe" resultType="int">
+		select count(*) from recipe_board where register >= sysdate-7
+	</select>
+	
+	<select id="party" resultType="int">
+		select count(*) from party_board where reg_date >= sysdate-7
+	</select>
+	
+	<select id="food" resultType="int">
+		select count(*) from food_board  where reg_date >= sysdate-7
+	</select>
+</mapper>

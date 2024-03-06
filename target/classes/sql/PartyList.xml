@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sober.dao.PartyListDAO">
+
+	<!-- <select id="getPk_num" parameterType="sober.model.PartyList" resultType="int"> 
+		select count(*) from party_member_list where status='accepted' group by bo_num 
+		having bo_num = #{bo_num} </select> -->
+	<select id="getPk_num" parameterType="int" resultType="int">
+		select
+		count(*) from party_member_list where status='accepted' group by
+		bo_num having bo_num = #{bo_num}
+	</select>
+
+	<!-- 원문은 바로 수락 : accepted -->
+	<insert id="insert_list_Member"
+		parameterType="sober.model.Party">
+		<selectKey keyProperty="bo_num" resultType="int" order="BEFORE">
+			select max(bo_num) from party_board where nickname =
+			#{nickname}
+		</selectKey>
+		insert into party_member_list
+		values(par_memlist_seq.nextval,#{bo_num},
+		sysdate,'accepted',#{nickname,jdbcType=VARCHAR},'y',null)
+	</insert>
+
+	<!-- 방장이 아닌 경우 insert : pending -->
+	<insert id="party_apply_insert"
+		parameterType="sober.model.PartyList">
+		insert into party_member_list
+		values(par_memlist_seq.nextval,#{bo_num},
+		sysdate,'pending',#{nickname,jdbcType=VARCHAR},'n',#{message})
+	</insert>
+
+	<select id="getPartyList" parameterType="int"
+		resultType="sober.model.PartyList">
+		select nickname,isLeader,profile_img from party_member_list
+		left outer join
+		tbl_profile using(nickname)
+		where bo_num = #{bo_num} and
+		status='accepted' order by li_num asc
+	</select>
+
+	<!-- 해당 닉네임의 유저가 이 파티에 참여중인지 가져온다. -->
+	<select id="userAttending" parameterType="java.util.Map"
+		resultType="java.lang.String">
+		select status from party_member_list where bo_num =
+		#{bo_num} and
+		nickname=#{nickname}
+	</select>
+
+
+	<!-- 파티원 참가 취소 버튼 클릭시 -->
+	<delete id="party_cancel" parameterType="sober.model.PartyList">
+		delete from
+		party_member_list where bo_num = #{bo_num} and nickname =
+		#{nickname}
+	</delete>
+
+	<!-- 파티원 참가 대기중인 사람들을 가져온다. -->
+	<select id="getPartyApplyList" parameterType="int"
+		resultType="sober.model.PartyList">
+		select
+		li_num,apply_date,status,nickname,isLeader,profile_img,message from
+		party_member_list left outer join tbl_profile using(nickname)
+		where
+		bo_num = #{bo_num} and status = 'pending' order by apply_date desc
+	</select>
+
+	<!-- 파티장이 수락시 status를 pending 에서 accepted로 변경 -->
+	<update id="updateAccepted" parameterType="int">
+		update
+		party_member_list set status = 'accepted' where li_num = #{li_num}
+	</update>
+
+
+	<!-- 파티장이 거절시 해당 요청을 삭제한다. -->
+	<delete id="deleteApply" parameterType="int">
+		delete from
+		party_member_list where li_num = #{li_num}
+	</delete>
+
+
+	<!-- 해당 파티의 유저 nickname을 모두 가져다 리턴한다. -->
+	<select id="getPartyMemberList" parameterType="int"
+		resultType="java.lang.String">
+		select nickname from party_member_list where bo_num =
+		#{bo_num} and isleader = 'n'
+	</select>
+
+	<!-- 해당 파티의 성별 리스트를 리턴한다. -->
+	<select id="getGenderList" parameterType="int"
+		resultType="java.lang.String">
+		select gender from member right inner join
+		party_member_list using(nickname)
+		where bo_num=#{bo_num}
+	</select>
+
+
+	<!-- 파티 일정 변동시 알림을 보낸다. -->
+	<insert id="sendUpdateMessage"
+		parameterType="sober.model.AlarmDTO">
+		insert into alarm_board
+		values(alarm_num_seq.nextval,#{receiver_nickname},
+		10,sysdate,'N',#{board_pk},#{sender_nickname})
+	</insert>
+
+	<!-- 게시글작성 또는 참가 신청시 기존 일정을 확인하고 중복이면 0이상을 리턴 -->
+	<select id="checkDuplicate" parameterType="java.util.Map"
+		resultType="int">
+		SELECT COUNT(*) FROM party_board WHERE bo_num IN ( SELECT bo_num FROM party_member_list WHERE nickname = #{nickname})
+		AND TO_CHAR(schedule, 'YY/MM/DD') = TO_CHAR(TO_DATE(#{day}, 'YY/MM/DD'),'YY/MM/DD')
+	</select>
+	
+	<delete id="partyAlarmAllDel" parameterType="int">
+	    delete from alarm_board where board_pk = #{bo_num} and table_url = '/party_detailpage?bo_num='
+	</delete>
+
+
+</mapper>
